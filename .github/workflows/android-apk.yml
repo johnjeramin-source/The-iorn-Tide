@@ -22,10 +22,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-
+      # No package-lock.json in the repo, and some packages declare optional peer ranges that
+      # conflict (for example vite and esbuild). legacy-peer-deps stops npm failing with ERESOLVE.
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
+      # Type-check and engine tests are reported but never block the APK: a failing test should
+      # show up in the run summary without stopping you from getting a build to play.
       - name: Type check (non-blocking)
         continue-on-error: true
         run: npm run lint
@@ -34,6 +37,8 @@ jobs:
         continue-on-error: true
         run: npm test
 
+      # Build the web app first so Capacitor always finds the dist folder, and fail here with a
+      # clear message if the web build itself is broken.
       - name: Build web app
         run: npm run build
 
@@ -45,13 +50,15 @@ jobs:
       - name: Add Android platform
         run: npm run cap:add
 
+      # Keep the Android launcher label and in-app activity title consistent.
       - name: Set Android app name
         run: |
+          STRINGS=android/app/src/main/res/values/strings.xml
           python3 - <<'PYNAME'
           from pathlib import Path
-          import re
           p = Path("android/app/src/main/res/values/strings.xml")
           s = p.read_text() if p.exists() else "<resources>\n</resources>\n"
+          import re
           for key in ("app_name", "title_activity_main"):
               value = "Iron Tide"
               pattern = rf'<string name="{key}">.*?</string>'
@@ -64,6 +71,7 @@ jobs:
           p.write_text(s)
           PYNAME
 
+      # Landscape lock + fullscreen immersive game window
       - name: Patch Android manifest and theme
         run: |
           MANIFEST=android/app/src/main/AndroidManifest.xml
@@ -73,6 +81,8 @@ jobs:
           grep -q 'windowFullscreen' "$STYLES" || \
             sed -i 's|</style>|    <item name="android:windowFullscreen">true</item>\n    </style>|' "$STYLES" || true
 
+      # Stable PNG-only launcher icons. Adaptive-icon generation (foreground/background
+      # layers) produced XML pointing at mipmaps that did not exist and broke the build.
       - name: Generate launcher icons safely
         run: |
           mkdir -p assets
@@ -140,6 +150,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      # If anything above failed, keep the Gradle reports so the real error can be read.
       - name: Upload build reports on failure
         if: failure()
         uses: actions/upload-artifact@v4

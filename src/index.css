@@ -1,0 +1,1241 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Arial Narrow', 'Roboto Condensed', system-ui, sans-serif;
+    --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    background-color: #07131f;
+    color: #f1f5f9;
+    touch-action: auto;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom subtle scrollbars for modals and shipyard drawer */
+.naval-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.naval-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.naval-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+}
+
+.naval-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+
+.iron-tide-boot {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(14, 74, 112, 0.34), transparent 42%),
+    linear-gradient(145deg, #050d16 0%, #0a1c2c 52%, #07131f 100%);
+  animation: iron-tide-boot-in 260ms ease-out both;
+}
+.iron-tide-boot-emblem { width: 112px; height: 112px; filter: drop-shadow(0 0 22px rgba(56,189,248,.18)); }
+.iron-tide-boot-emblem svg { width: 100%; height: 100%; }
+.iron-tide-loading-track { height: 3px; overflow: hidden; border-radius: 999px; background: rgba(148,163,184,.18); }
+.iron-tide-loading-track span { display: block; width: 42%; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#0ea5e9,#f59e0b); animation: iron-tide-loading 1.05s ease-in-out forwards; }
+@keyframes iron-tide-loading { from { transform: translateX(-110%); } to { transform: translateX(260%); } }
+@keyframes iron-tide-boot-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .iron-tide-loading-track span { animation-duration: .01ms; } }
+
+/* Landscape touch HUD: compact command rail is selected by input capability or height,
+   never by Tailwind's md width breakpoint. */
+.command-dock-compact { display: none; }
+.command-dock-desktop { display: block; }
+@media (pointer: coarse), (max-height: 500px) {
+  .command-dock-desktop { display: none !important; }
+  .command-dock-compact { display: block !important; }
+  .command-dock-compact {
+    display: block !important;
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: max(2px, env(safe-area-inset-bottom));
+    touch-action: auto;
+  }
+  .command-dock-compact > div {
+    padding: 5px 7px;
+    gap: 5px;
+    border-radius: 10px;
+    background: rgba(5, 15, 26, .78) !important;
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+  }
+  .command-dock-compact .hud-action-strip,
+  .command-dock-compact [data-hud-scroll="true"] {
+    max-width: 100%;
+    min-height: 48px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 1px;
+  }
+  .hud-action-strip::-webkit-scrollbar,
+  .command-dock-compact [data-hud-scroll="true"]::-webkit-scrollbar { display: none; }
+  .command-dock-compact button { min-height: 38px; }
+}
+#root { min-height: 100dvh; }
+
+/* Touch interaction belongs to the game canvas; HUD controls retain native scrolling. */
+.hud-action-strip {
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hud-action-strip::-webkit-scrollbar { display: none; }
+
+@media (pointer: coarse), (max-height: 500px) {
+  /* Save vertical room for the bottom command dock on landscape phones. */
+  .command-dock-compact { margin-bottom: 0; }
+  .command-dock-desktop { display: none !important; }
+  .command-dock-compact { display: block !important; }
+  .hud-action-strip > * { flex: 0 0 auto; }
+}
+
+
+/* HUD layout follows input capability / viewport height, not the md width breakpoint.
+   This matters on landscape phones whose CSS width is often >= 768px. */
+.desktop-hud-only { display: block; }
+.desktop-hud-inline { display: inline; }
+.touch-hud-only { display: none; }
+
+@media (pointer: coarse), (max-height: 500px) {
+  .desktop-hud-only,
+  .desktop-hud-inline { display: none !important; }
+  .touch-hud-only { display: flex !important; }
+  .command-dock-desktop { display: none !important; }
+  .command-dock-compact { display: block !important; }
+  .command-dock-compact .hud-action-strip {
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    min-width: 0;
+  }
+  .command-dock-compact .hud-action-strip::-webkit-scrollbar { display: none; }
+}
+
+
+/* Landscape-phone command interface */
+html, body, #root {
+  min-height: 100%;
+  height: 100%;
+}
+.game-root {
+  height: 100dvh;
+  min-height: 100dvh;
+  width: 100dvw;
+}
+.game-canvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.game-hud-root {
+  padding-top: max(5px, env(safe-area-inset-top));
+  padding-right: max(5px, env(safe-area-inset-right));
+  padding-bottom: max(5px, env(safe-area-inset-bottom));
+  padding-left: max(5px, env(safe-area-inset-left));
+}
+.hud-icon-label { display: none; }
+.hud-utility-btn { min-width: 36px; }
+.selection-command-panel {
+  background: rgba(5, 15, 26, .86);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+.selection-command-btn {
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 9px;
+  border: 1px solid rgba(100,116,139,.55);
+  border-radius: 6px;
+  background: rgba(30,41,59,.85);
+  color: #e2e8f0;
+  font-size: 10px;
+  font-weight: 800;
+}
+.touch-mode-indicator {
+  display: none;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 7px;
+  border: 1px solid rgba(245,158,11,.5);
+  border-radius: 5px;
+  color: #fbbf24;
+  background: rgba(120,53,15,.24);
+  font: 800 9px ui-monospace, monospace;
+  letter-spacing: .06em;
+}
+.hud-sector-stat { display: block; }
+
+@media (pointer: coarse), (max-height: 500px) {
+  .game-hud-root { padding: 4px; }
+  .hud-top-row {
+    align-items: flex-start;
+    gap: 5px;
+    padding-right: 47px;
+  }
+  .hud-telemetry {
+    max-width: none;
+    width: 100%;
+    padding: 5px 7px;
+    border-radius: 8px;
+    background: rgba(5, 15, 26, .72) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .hud-telemetry > div:first-child {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .hud-telemetry > div:first-child > div {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+  .hud-telemetry > div:first-child > div > div:first-child {
+    font-size: 8px;
+    line-height: 1;
+  }
+  .hud-telemetry > div:first-child > div > div:last-child {
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .hud-telemetry .desktop-hud-only,
+  .hud-telemetry > div:nth-child(2),
+  .hud-telemetry > .mt-2 {
+    display: none !important;
+  }
+  .hud-infected,
+  .hud-sector-stat { display: block !important; }
+  .hud-utility-rail {
+    position: fixed;
+    top: max(48px, calc(env(safe-area-inset-top) + 44px));
+    right: max(4px, env(safe-area-inset-right));
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    max-height: calc(100dvh - 150px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+    border: 1px solid rgba(71,85,105,.55);
+    border-radius: 10px;
+    background: rgba(5,15,26,.58);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    touch-action: pan-y;
+    scrollbar-width: none;
+  }
+  .hud-utility-rail::-webkit-scrollbar { display: none; }
+  .hud-utility-btn,
+  .hud-sound-btn,
+  .hud-restart-btn {
+    display: flex !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    font-size: 19px !important;
+    line-height: 1;
+    border-radius: 8px;
+  }
+  .hud-wide-label,
+  .hud-utility-label { display: none !important; }
+  .hud-icon-label { display: inline !important; font-size: 19px; }
+  .hud-utility-btn svg { width: 19px; height: 19px; }
+  .selection-command-panel {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    max-width: calc(100vw - 18px);
+    gap: 4px;
+    padding: 5px;
+  }
+  .selection-command-btn {
+    min-width: 42px;
+    min-height: 40px;
+    padding: 0 7px;
+  }
+  .touch-mode-indicator { display: inline-flex; }
+  .command-dock-compact {
+    padding-bottom: max(2px, env(safe-area-inset-bottom));
+  }
+  .command-dock-compact > div {
+    padding: 4px 5px;
+    gap: 4px;
+    background: rgba(5,15,26,.78) !important;
+  }
+  .command-dock-compact button { min-height: 40px; }
+  .command-dock-compact .hud-action-strip { min-height: 44px; }
+  [data-testid="tactical-minimap"] {
+    position: fixed;
+    right: max(54px, calc(env(safe-area-inset-right) + 50px));
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 15;
+    transform: scale(.78);
+    transform-origin: bottom right;
+    opacity: .92;
+  }
+  [data-testid="tactical-minimap"] canvas {
+    width: 120px !important;
+    height: 72px !important;
+  }
+}
+@media (max-height: 390px) and (pointer: coarse) {
+  .hud-utility-rail { top: calc(env(safe-area-inset-top) + 38px); gap: 2px; }
+  .hud-utility-btn { width: 40px !important; min-width: 40px !important; height: 40px !important; min-height: 40px !important; }
+  .selection-command-panel { bottom: calc(66px + env(safe-area-inset-bottom)); }
+}
+
+
+.title-screen {
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  touch-action: pan-y;
+}
+@media (max-height: 500px) {
+  .title-screen > div:nth-child(2) {
+    align-items: flex-start;
+    padding-top: 10px;
+    padding-bottom: 12px;
+  }
+  .title-screen > div:nth-child(2) > div {
+    max-width: min(480px, 62vw);
+  }
+  .title-screen img[alt="IRON TIDE: Coastal Vanguard"] {
+    max-width: 190px;
+    max-height: 74px;
+    object-fit: contain;
+    object-position: left center;
+  }
+  .title-screen p {
+    font-size: 11px;
+    line-height: 1.35;
+    margin-bottom: 9px;
+  }
+  .title-screen .mb-4,
+  .title-screen .mb-5 { margin-bottom: 8px; }
+  .title-screen .py-2 { padding-top: 5px; padding-bottom: 5px; }
+}
+
+@media (pointer: coarse), (max-height: 500px) {
+  .compact-unit-name { display: none !important; }
+}
+
+
+/* Military ID profile: compact, safe-area aware, and touch-scrollable. */
+.profile-chip {
+  top: calc(env(safe-area-inset-top) + 10px);
+  right: calc(env(safe-area-inset-right) + 10px);
+  min-height: 44px;
+  max-width: min(210px, 44vw);
+  border-color: rgba(100,116,139,.65);
+  background: rgba(5, 17, 30, .88);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  touch-action: manipulation;
+}
+.player-avatar-frame {
+  border: 2px solid;
+  background: #071522;
+}
+.player-avatar-frame img { display: block; }
+.player-avatar-star {
+  position: absolute;
+  right: -1px;
+  bottom: -2px;
+  display: grid;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  border: 1px solid #f8d46a;
+  border-radius: 50%;
+  background: #9a6414;
+  color: #fff2b2;
+  font-size: 9px;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000;
+}
+.player-avatar-cartoon {
+  filter: contrast(1.24) saturate(1.42) brightness(1.04)
+    drop-shadow(1px 0 0 #07111b) drop-shadow(-1px 0 0 #07111b)
+    drop-shadow(0 1px 0 #07111b) drop-shadow(0 -1px 0 #07111b);
+}
+.profile-overlay {
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+    max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  background: rgba(1, 7, 13, .82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: profile-fade-in .18s ease-out both;
+  touch-action: pan-y;
+}
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 100%);
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+  overflow: hidden;
+  border: 1px solid rgba(148,163,184,.42);
+  border-radius: 13px;
+  background:
+    linear-gradient(135deg, rgba(23,50,73,.94), transparent 42%),
+    linear-gradient(180deg, #0c1c2c 0%, #071421 100%);
+  box-shadow: 0 24px 70px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
+  color: #e2e8f0;
+  animation: profile-card-in .22s cubic-bezier(.2,.8,.2,1) both;
+}
+.profile-heading {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(148,163,184,.2);
+  background: linear-gradient(90deg, rgba(245,158,11,.12), transparent 55%);
+}
+.profile-kicker {
+  color: #7dd3fc;
+  font: 800 9px/1.3 ui-monospace, monospace;
+  letter-spacing: .16em;
+}
+.profile-heading h2 {
+  margin: 2px 0 0;
+  color: #f8fafc;
+  font-size: 19px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-shadow: 0 2px 10px rgba(0,0,0,.5);
+}
+.profile-id-tag {
+  padding: 5px 8px;
+  border: 1px solid rgba(245,158,11,.38);
+  border-radius: 4px;
+  color: #fbbf24;
+  font: 800 9px ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+.profile-content {
+  display: grid;
+  grid-template-columns: minmax(210px, .78fr) minmax(0, 1.5fr);
+  gap: 15px;
+  min-height: 0;
+  padding: 14px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: #475569 transparent;
+}
+.profile-identity-column,
+.profile-stats-column { min-width: 0; }
+.profile-identity-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 12px 12px;
+  border: 1px solid rgba(100,116,139,.4);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(30,58,82,.8), rgba(5,17,30,.72));
+}
+.profile-large-avatar { margin: 2px 0 8px; }
+.profile-rank-star {
+  position: absolute;
+  top: 75px;
+  left: calc(50% + 25px);
+  color: #fbbf24;
+  font-size: 23px;
+  line-height: 1;
+  text-shadow: 0 2px 6px #000;
+}
+.profile-call-sign {
+  max-width: 100%;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 17px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-rank-name {
+  margin-top: 1px;
+  color: #fbbf24;
+  font: 900 10px ui-monospace, monospace;
+  letter-spacing: .12em;
+}
+.profile-rank-track {
+  width: 100%;
+  height: 6px;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: 10px;
+  background: #020a12;
+}
+.profile-rank-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b7791f, #fbbf24, #fde68a);
+  box-shadow: 0 0 10px rgba(251,191,36,.5);
+}
+.profile-rank-caption {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  margin-top: 5px;
+  color: #94a3b8;
+  font: 800 8px ui-monospace, monospace;
+}
+.profile-field-label,
+.profile-section-label,
+.profile-section-heading {
+  display: block;
+  margin: 11px 0 5px;
+  color: #7dd3fc;
+  font: 900 9px ui-monospace, monospace;
+  letter-spacing: .12em;
+}
+.profile-input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid rgba(100,116,139,.6);
+  border-radius: 6px;
+  outline: none;
+  background: rgba(2,10,18,.78);
+  color: #f8fafc;
+  font-size: 13px;
+}
+.profile-input:focus { border-color: #38bdf8; }
+.profile-color-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.profile-color-swatch {
+  width: 25px;
+  height: 25px;
+  border: 2px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+}
+.profile-color-swatch.selected {
+  outline: 2px solid #f8fafc;
+  outline-offset: 2px;
+}
+.profile-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(100,116,139,.32);
+  color: #fbbf24;
+  font-size: 10px;
+}
+.profile-section-heading span {
+  color: #64748b;
+  font-size: 8px;
+  letter-spacing: .06em;
+}
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.profile-stat-card {
+  display: grid;
+  grid-template-columns: 24px minmax(0,1fr);
+  align-items: center;
+  min-height: 53px;
+  padding: 7px 8px;
+  border: 1px solid rgba(100,116,139,.32);
+  border-radius: 7px;
+  background: rgba(3,13,23,.62);
+}
+.profile-stat-icon {
+  grid-row: span 2;
+  color: #fbbf24;
+  font-size: 17px;
+  text-align: center;
+}
+.profile-stat-label {
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-stat-value {
+  overflow: hidden;
+  color: #f8fafc;
+  font: 900 14px ui-monospace, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-avatar-heading { margin-top: 13px; }
+.profile-avatar-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 10px;
+  align-items: center;
+}
+.profile-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+.profile-avatar-choice {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 2px solid rgba(100,116,139,.45);
+  border-radius: 50%;
+  background: #071522;
+}
+.profile-avatar-choice img { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar-choice.selected {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px rgba(251,191,36,.2), 0 0 13px rgba(251,191,36,.25);
+}
+.profile-avatar-actions { display: flex; flex-direction: column; gap: 7px; }
+.profile-tool-button,
+.profile-reset-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 37px;
+  padding: 6px;
+  border: 1px solid rgba(100,116,139,.5);
+  border-radius: 6px;
+  background: rgba(15,38,58,.9);
+  color: #dbeafe;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .03em;
+}
+.profile-tool-button span { color: #7dd3fc; font-size: 16px; }
+.profile-reset-button { color: #fbbf24; }
+.profile-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  color: #cbd5e1;
+  font-size: 9px;
+  font-weight: 800;
+}
+.profile-filter-toggle input { accent-color: #f59e0b; width: 16px; height: 16px; }
+.profile-error {
+  margin-top: 7px;
+  color: #fca5a5;
+  font-size: 10px;
+}
+.profile-footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 15px;
+  border-top: 1px solid rgba(148,163,184,.24);
+  background: rgba(2,10,18,.72);
+}
+.profile-footer > span {
+  color: #64748b;
+  font: 800 8px ui-monospace, monospace;
+  letter-spacing: .1em;
+}
+.profile-save-button {
+  min-width: 160px;
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid #fde68a;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #fcd34d, #d99518);
+  color: #111827;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .07em;
+  box-shadow: 0 3px 12px rgba(217,149,24,.22);
+}
+@keyframes profile-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes profile-card-in { from { opacity: 0; transform: translateY(9px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.hud-player-identity {
+  position: fixed;
+  top: max(5px, env(safe-area-inset-top));
+  right: max(52px, calc(env(safe-area-inset-right) + 50px));
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 145px;
+  padding: 4px 7px;
+  border: 1px solid rgba(100,116,139,.45);
+  border-radius: 8px;
+  background: rgba(5,15,26,.74);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+@media (max-height: 500px), (pointer: coarse) {
+  .profile-overlay { align-items: center; }
+  .profile-card { width: min(850px, 100%); }
+  .profile-heading { padding: 7px 12px; }
+  .profile-heading h2 { font-size: 16px; }
+  .profile-content { grid-template-columns: minmax(185px,.72fr) minmax(0,1.55fr); gap: 10px; padding: 8px 11px; }
+  .profile-large-avatar { width: 68px !important; height: 68px !important; }
+  .profile-rank-star { top: 55px; font-size: 18px; }
+  .profile-identity-card { padding: 6px 9px 8px; }
+  .profile-call-sign { font-size: 14px; }
+  .profile-rank-track { margin-top: 6px; }
+  .profile-field-label, .profile-section-label { margin-top: 7px; }
+  .profile-input { min-height: 34px; }
+  .profile-footer { padding: 6px 10px; }
+  .profile-save-button { min-height: 42px; }
+  .hud-player-identity { top: calc(env(safe-area-inset-top) + 46px); right: max(52px, calc(env(safe-area-inset-right) + 50px)); }
+}
+@media (max-width: 600px) {
+  .profile-content { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+  .profile-avatar-tools { grid-template-columns: 1fr; }
+  .profile-avatar-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .profile-filter-toggle { grid-column: 1 / -1; }
+}
+
+
+/* Compact one-row landscape dock */
+@media (pointer: coarse), (max-height: 500px) {
+  .command-dock-compact { position: relative; z-index: 22; transition: transform .22s ease, opacity .22s ease; }
+  .command-dock-compact.dock-hidden { transform: translateY(calc(100% + 8px)); opacity: 0; pointer-events: none; }
+  .command-dock-compact.dock-visible { transform: translateY(0); opacity: 1; }
+  .dock-single-row { display: flex; flex-direction: row !important; align-items: center; gap: 5px; min-height: 48px; max-height: 58px; overflow: hidden; }
+  .dock-tabs { flex: 0 0 auto; }
+  .dock-tab { min-height: 34px !important; padding: 0 7px; border: 1px solid rgba(100,116,139,.5); border-radius: 5px; background: rgba(30,41,59,.85); color: #cbd5e1; font: 800 9px ui-monospace,monospace; }
+  .dock-tab.active { background: #0ea5e9; border-color: #38bdf8; color: #07131e; }
+  .command-dock-compact .hud-action-strip { flex: 1 1 auto; min-width: 0; min-height: 38px; max-height: 44px; }
+  .command-dock-compact .hud-action-strip > button { min-height: 34px !important; max-height: 38px; padding-top: 4px !important; padding-bottom: 4px !important; }
+  .dock-mode-group { display: flex; flex: 0 0 auto; gap: 2px; }
+  .dock-mode-group button { width: 30px; min-width: 30px; height: 32px; min-height: 32px !important; padding: 0; border: 1px solid rgba(100,116,139,.55); border-radius: 5px; background: #1e293b; color: #cbd5e1; font-size: 16px; font-weight: 900; }
+  .dock-mode-group button.active { background: #fbbf24; color: #111827; border-color: #fde68a; }
+  .dock-action-mini { min-height: 32px !important; padding: 0 8px; border: 1px solid #64748b; border-radius: 5px; background: #1e293b; color: #fbbf24; font-size: 10px; font-weight: 900; }
+  .dock-reveal-handle { position: fixed; right: 12px; bottom: max(5px,env(safe-area-inset-bottom)); z-index: 24; width: 42px; height: 18px; border: 1px solid rgba(148,163,184,.65); border-radius: 8px 8px 0 0; background: rgba(5,15,26,.9); color: #fbbf24; font-weight: 900; }
+  .selection-command-panel { bottom: calc(58px + env(safe-area-inset-bottom)); max-width: calc(100vw - 12px); gap: 3px; padding: 4px; }
+  .selection-command-btn { min-width: 36px; min-height: 30px; padding: 0 5px; font-size: 9px; }
+  .hud-player-identity { top: calc(env(safe-area-inset-top) + 54px); left: max(5px,env(safe-area-inset-left)); right: auto; z-index: 20; max-width: 118px; padding: 3px 5px; }
+  .hud-utility-rail { top: max(50px,calc(env(safe-area-inset-top) + 48px)); right: max(4px,env(safe-area-inset-right)); max-height: calc(100dvh - 120px - env(safe-area-inset-bottom)); }
+  .hud-utility-btn { width: 38px !important; min-width: 38px !important; height: 38px !important; min-height: 38px !important; }
+  [data-testid="tactical-minimap"] { bottom: calc(60px + env(safe-area-inset-bottom)); }
+}
+@media (max-height: 390px) and (pointer: coarse) {
+  .dock-single-row { min-height: 44px; max-height: 48px; gap: 3px; }
+  .dock-tab { padding: 0 5px; font-size: 8px; }
+  .dock-mode-group button { width: 26px; min-width: 26px; height: 29px; min-height: 29px !important; }
+  .selection-command-panel { bottom: calc(50px + env(safe-area-inset-bottom)); }
+}
+
+.settings-overlay { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); background: rgba(1,7,13,.84); backdrop-filter: blur(9px); }
+.settings-card { display: flex; flex-direction: column; width: min(640px,100%); max-height: calc(100dvh - 16px); overflow: hidden; border: 1px solid rgba(148,163,184,.45); border-radius: 12px; background: #0b1928; color: #e2e8f0; box-shadow: 0 20px 70px rgba(0,0,0,.65); }
+.settings-header,.settings-footer { display:flex; align-items:center; justify-content:space-between; padding: 9px 13px; border-bottom:1px solid rgba(148,163,184,.2); }
+.settings-header small { color:#7dd3fc; font:800 8px ui-monospace,monospace; letter-spacing:.14em; }
+.settings-header h2 { margin:2px 0 0; font-size:19px; font-weight:950; }
+.settings-header > button { width:34px;height:34px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#fff; }
+.settings-content { overflow-y:auto; padding: 8px 13px; touch-action:pan-y; }
+.settings-content h3 { margin:10px 0 5px; padding-bottom:4px; border-bottom:1px solid rgba(100,116,139,.35); color:#7dd3fc; font:900 10px ui-monospace,monospace; letter-spacing:.1em; text-transform:uppercase; }
+.settings-row { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:34px; padding:4px 0; font-size:11px; }
+.settings-row small { display:block;color:#94a3b8;font-size:9px; }
+.settings-switch { display:flex;align-items:center;gap:6px;min-width:65px;justify-content:center;padding:5px 8px;border:1px solid #475569;border-radius:5px;background:#1e293b;color:#cbd5e1;font-size:9px;font-weight:900; }
+.settings-switch span { width:7px;height:7px;border-radius:50%;background:#64748b; }
+.settings-switch.is-on { border-color:#0ea5e9;color:#7dd3fc; } .settings-switch.is-on span { background:#38bdf8; }
+.settings-segment { display:flex;gap:3px;flex-wrap:wrap; }
+.settings-segment button { padding:5px 7px;border:1px solid #475569;border-radius:4px;background:#1e293b;color:#cbd5e1;font-size:8px;font-weight:900; }
+.settings-segment button.active { border-color:#fbbf24;background:#fbbf24;color:#111827; }
+.settings-slider-row input { flex:1;min-width:70px;accent-color:#38bdf8; } .settings-slider-row strong { min-width:36px;text-align:right;color:#fbbf24;font:800 10px ui-monospace,monospace; }
+.settings-footer { justify-content:flex-end;border-top:1px solid rgba(148,163,184,.2);border-bottom:0; }
+.settings-footer button { min-width:90px;padding:7px 12px;border-radius:5px;background:#fbbf24;color:#111827;font-size:11px;font-weight:900; }
+html[data-large-text="true"] .game-hud-root { font-size:1.12em; }
+html[data-colorblind="true"] .hud-telemetry { border-color:#facc15; }
+html[data-left-handed="true"] .hud-utility-rail { left:max(4px,env(safe-area-inset-left)); right:auto; }
+
+html[data-left-handed="true"] .hud-player-identity { left:auto; right:max(50px,calc(env(safe-area-inset-right) + 48px)); }
+@media (pointer: coarse), (max-height: 500px) {
+  .command-dock-compact .hud-action-strip [data-deploy],
+  .command-dock-compact .hud-action-strip [data-place] {
+    flex-direction: row !important;
+    align-items: center;
+    min-width: 54px;
+    min-height: 40px !important;
+    max-height: 44px;
+    gap: 3px;
+    padding: 2px 4px !important;
+  }
+  .command-dock-compact .hud-action-strip [data-deploy] > :first-child,
+  .command-dock-compact .hud-action-strip [data-place] > :first-child {
+    width: 23px !important;
+    height: 23px !important;
+    flex: 0 0 23px;
+  }
+  .command-dock-compact .hud-action-strip [data-deploy] .compact-unit-name { display:none !important; }
+  .command-dock-compact .hud-action-strip [data-deploy] .font-mono-tabular,
+  .command-dock-compact .hud-action-strip [data-place] .font-mono-tabular { font-size:9px; }
+}
+
+/* Part 16: keep the compact mobile command dock above the canvas, minimap and
+   Android gesture/navigation inset. The parent HUD intentionally ignores hits;
+   this dock explicitly restores hit testing and native button taps. */
+@media (pointer: coarse), (max-height: 500px) {
+  .command-dock-compact {
+    position: fixed !important;
+    left: max(4px, env(safe-area-inset-left));
+    right: max(4px, env(safe-area-inset-right));
+    bottom: max(4px, env(safe-area-inset-bottom));
+    z-index: 60 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: auto !important;
+    isolation: isolate;
+  }
+  .command-dock-compact,
+  .command-dock-compact * { pointer-events: auto; }
+  .command-dock-compact button {
+    position: relative;
+    z-index: 1;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .command-dock-compact .hud-action-strip,
+  .command-dock-compact [data-hud-scroll="true"] {
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+  }
+  .selection-command-panel {
+    bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+    z-index: 55 !important;
+  }
+}
+
+
+/* Part 17: isolate touch command interactions from battlefield pointer handlers.
+   Capture handlers in GameHud stop propagation; these styles keep controls tappable
+   while allowing intentional horizontal scrolling within the action strips. */
+@media (pointer: coarse), (max-height: 500px) {
+  .command-dock-compact {
+    z-index: 100 !important;
+    contain: layout paint;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .command-dock-compact button,
+  .selection-command-panel button {
+    min-height: 42px;
+    touch-action: manipulation;
+    pointer-events: auto !important;
+    cursor: pointer;
+  }
+  .command-dock-compact .hud-action-strip,
+  .command-dock-compact [data-hud-scroll="true"] {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+  .command-dock-compact button:active,
+  .selection-command-panel button:active {
+    filter: brightness(1.2);
+    transform: translateY(1px);
+  }
+}
+
+
+/* Part 18: keep the mobile command dock above the canvas and make controls
+   reliable on touchscreens without blocking horizontal command-strip scrolling. */
+.command-dock-compact {
+  position: relative;
+  z-index: 60;
+  pointer-events: auto;
+  isolation: isolate;
+}
+.command-dock-compact button,
+.command-dock-desktop button,
+.selection-command-panel button,
+.hud-utility-rail button {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.command-dock-compact button {
+  min-height: 44px;
+}
+.command-dock-compact button:focus-visible,
+.command-dock-desktop button:focus-visible,
+.selection-command-panel button:focus-visible,
+.hud-utility-rail button:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+
+/* Part 19: improve command-strip reachability on narrow phone screens. */
+@media (max-width: 640px) {
+  .command-dock-compact {
+    width: 100%;
+    max-width: 100vw;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    overflow: visible;
+  }
+  .command-dock-compact [data-command-strip],
+  .command-dock-compact .command-strip {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .command-dock-compact button {
+    flex: 0 0 auto;
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+
+/* IRON TIDE 4.0 — cohesive tactical HUD visual refresh */
+:root {
+  --it-panel: rgba(5, 14, 25, .91);
+  --it-panel-soft: rgba(10, 25, 40, .88);
+  --it-line: rgba(111, 145, 170, .34);
+  --it-cyan: #53d4ed;
+  --it-amber: #f3b743;
+  --it-red: #f16b70;
+}
+
+.game-hud-root { isolation: isolate; }
+.hud-telemetry {
+  border: 1px solid var(--it-line) !important;
+  border-top: 2px solid rgba(83, 212, 237, .62) !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, rgba(13, 31, 47, .94), var(--it-panel)) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.34), inset 0 1px rgba(255,255,255,.045) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.hud-telemetry [data-testid="hud-req"] { text-shadow: 0 0 16px rgba(243,183,67,.2); }
+.hud-player-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid var(--it-line);
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(13,31,47,.96), rgba(5,14,25,.92));
+  box-shadow: 0 8px 22px rgba(0,0,0,.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.hud-utility-rail {
+  padding: 5px;
+  border: 1px solid var(--it-line);
+  border-radius: 11px;
+  background: rgba(5,14,25,.82);
+  box-shadow: 0 8px 22px rgba(0,0,0,.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.hud-utility-btn {
+  border-color: rgba(106,140,164,.38) !important;
+  background-color: rgba(18,37,54,.92) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.045);
+  transition: transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease;
+}
+.hud-utility-btn:active, .hud-category-tab:active,
+.hud-unit-btn:active, .hud-build-btn:active, .hud-strike-btn:active,
+.selection-command-btn:active { transform: translateY(1px) scale(.97); }
+.hud-utility-btn:hover { border-color: rgba(83,212,237,.75) !important; box-shadow: 0 0 12px rgba(83,212,237,.10); }
+
+.hud-desktop-dock, .hud-mobile-dock {
+  border-color: rgba(99,137,163,.48) !important;
+  border-top: 2px solid rgba(83,212,237,.55) !important;
+  background: linear-gradient(145deg, rgba(13,30,46,.97), rgba(4,13,23,.97)) !important;
+  box-shadow: 0 16px 38px rgba(0,0,0,.48), inset 0 1px rgba(255,255,255,.055) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.hud-desktop-dock > div:first-child { border-radius: 11px; }
+.hud-unit-btn, .hud-build-btn, .hud-strike-btn {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 43px;
+  padding: 5px 9px;
+  overflow: hidden;
+  border: 1px solid rgba(105,139,163,.42);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(30,53,72,.96), rgba(13,29,44,.98));
+  color: #e6f0f7;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .025em;
+  white-space: nowrap;
+  box-shadow: inset 0 1px rgba(255,255,255,.06), 0 3px 8px rgba(0,0,0,.2);
+  transition: border-color .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease, opacity .14s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.hud-unit-btn::before, .hud-build-btn::before, .hud-strike-btn::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: rgba(83,212,237,.58);
+  content: '';
+}
+.hud-unit-btn:hover:not(:disabled), .hud-build-btn:hover:not(:disabled), .hud-strike-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(83,212,237,.8);
+  background: linear-gradient(180deg, rgba(35,72,94,.98), rgba(13,37,54,.98));
+  box-shadow: 0 0 15px rgba(83,212,237,.12), inset 0 1px rgba(255,255,255,.08);
+}
+.hud-unit-btn:focus-visible, .hud-build-btn:focus-visible, .hud-strike-btn:focus-visible,
+.hud-utility-btn:focus-visible, .hud-category-tab:focus-visible, .selection-command-btn:focus-visible {
+  outline: 2px solid var(--it-amber);
+  outline-offset: 2px;
+}
+.hud-unit-btn:disabled, .hud-build-btn:disabled, .hud-strike-btn:disabled {
+  opacity: .48;
+  filter: saturate(.55);
+  cursor: not-allowed;
+}
+.hud-unit-btn .font-mono-tabular, .hud-build-btn .font-mono-tabular, .hud-strike-btn .font-mono-tabular {
+  color: var(--it-amber);
+  font-size: 10px;
+  font-weight: 900;
+}
+.hud-unit-btn-wide { min-height: 42px; }
+.hud-unit-btn-compact, .hud-build-btn-compact {
+  min-width: 68px;
+  min-height: 58px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 7px;
+  border-radius: 9px;
+  font-size: 9px;
+}
+.hud-unit-btn-compact .compact-unit-name { display: block !important; max-width: 68px; overflow: hidden; text-overflow: ellipsis; }
+.hud-unit-btn-compact img, .hud-build-btn-compact img { filter: drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
+.hud-build-btn.is-active { border-color: #55d8ef; background: linear-gradient(180deg, rgba(12,111,139,.55), rgba(10,47,67,.98)); color: #c9f7ff; box-shadow: 0 0 14px rgba(83,212,237,.18), inset 0 0 0 1px rgba(83,212,237,.18); }
+.hud-strike-btn { border-color: rgba(205,137,62,.52); background: linear-gradient(180deg, rgba(75,48,27,.96), rgba(39,27,22,.98)); }
+.hud-strike-btn::before { background: #f3a544; }
+.hud-strike-btn.is-active { border-color: #f5b44d; background: linear-gradient(180deg, rgba(137,79,25,.8), rgba(65,39,22,.98)); color: #ffdfa4; box-shadow: 0 0 15px rgba(243,183,67,.16); }
+.hud-category-tab {
+  min-height: 36px;
+  padding: 0 13px !important;
+  border: 1px solid rgba(105,139,163,.35);
+  border-radius: 7px !important;
+  background: rgba(20,39,56,.92);
+  color: #b9cbd8;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  transition: .14s ease;
+  touch-action: manipulation;
+}
+.hud-category-tab[class*="bg-sky-500"] { border-color: rgba(83,212,237,.85); background: linear-gradient(180deg,#47c7df,#1786a5) !important; color: #03131d !important; box-shadow: 0 3px 12px rgba(30,173,207,.22); }
+.selection-command-panel {
+  border: 1px solid rgba(83,212,237,.58) !important;
+  border-top: 2px solid var(--it-cyan) !important;
+  border-radius: 11px !important;
+  background: linear-gradient(145deg, rgba(13,32,48,.97), rgba(4,13,23,.97)) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.5), 0 0 18px rgba(83,212,237,.08) !important;
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
+}
+.selection-command-btn {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(104,143,168,.48);
+  border-radius: 7px;
+  background: linear-gradient(180deg, rgba(31,56,75,.98), rgba(14,31,46,.98));
+  color: #e2edf5;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  box-shadow: inset 0 1px rgba(255,255,255,.05);
+  touch-action: manipulation;
+}
+.selection-command-btn:hover { border-color: rgba(83,212,237,.8); color: #a5f3fc; }
+[data-testid="tactical-minimap"] {
+  border: 1px solid rgba(83,212,237,.52) !important;
+  border-radius: 10px !important;
+  background: linear-gradient(145deg, rgba(13,31,47,.98), rgba(4,13,23,.98)) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.48), 0 0 18px rgba(83,212,237,.08) !important;
+}
+[data-testid="tactical-minimap"] > div:first-child {
+  min-height: 27px;
+  padding: 5px 8px;
+  background: linear-gradient(90deg, rgba(83,212,237,.13), transparent);
+  letter-spacing: .11em;
+}
+[data-testid="tactical-minimap"] canvas { display: block; image-rendering: auto; }
+
+@media (pointer: coarse), (max-height: 500px) {
+  .hud-player-identity { padding: 4px; border-radius: 9px; }
+  .hud-player-identity > span { display: none; }
+  .hud-telemetry { border-radius: 9px !important; }
+  .hud-utility-rail { border-radius: 10px; background: rgba(4,13,23,.88); }
+  .hud-utility-btn { border-radius: 9px !important; }
+  .hud-mobile-dock { gap: 5px !important; padding: 6px !important; }
+  .hud-mobile-dock > div:first-child { padding: 3px !important; }
+  .hud-action-strip { gap: 6px !important; min-height: 62px !important; padding: 2px 1px 4px !important; }
+  .hud-unit-btn-compact, .hud-build-btn-compact { min-width: 70px; min-height: 58px; }
+  .hud-strike-btn-compact { min-height: 48px; padding: 0 12px; border-radius: 8px; }
+  .hud-category-tab { min-height: 35px; }
+  .selection-command-panel { gap: 4px !important; }
+  .selection-command-btn { min-width: 47px; min-height: 42px; padding: 0 9px; }
+}
+@media (max-width: 420px) and (pointer: coarse) {
+  .hud-telemetry > div:first-child { gap: 4px !important; }
+  .hud-telemetry > div:first-child > div > div:first-child { font-size: 7px !important; }
+  .hud-telemetry > div:first-child > div > div:last-child { font-size: 10px !important; }
+  .hud-unit-btn-compact, .hud-build-btn-compact { min-width: 63px; }
+  .selection-command-panel { max-width: calc(100vw - 10px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-utility-btn, .hud-unit-btn, .hud-build-btn, .hud-strike-btn, .hud-category-tab { transition: none !important; }
+}
+.selection-overview { min-width: 112px; }
+.selection-unit-types {
+  max-width: 150px;
+  overflow: hidden;
+  margin-top: 1px;
+  color: #a9c4d5;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.selection-health-track {
+  width: 100%;
+  height: 4px;
+  margin: 4px 0 3px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(2,8,15,.9);
+}
+.selection-health-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#d97706,#facc15 55%,#4ade80);
+  box-shadow: 0 0 8px rgba(74,222,128,.22);
+  transition: width .18s ease;
+}
+@media (pointer: coarse), (max-height: 500px) {
+  .selection-overview { min-width: 92px; }
+  .selection-unit-types { max-width: 105px; }
+}
+
+/* ============================================================
+   Part 23 - Phone compaction. Loaded last so it wins over the
+   older per-part overrides. Goal: HUD uses as little of the
+   screen as possible and every control stays tappable.
+   ============================================================ */
+@media (pointer: coarse), (max-height: 500px) {
+  .game-hud-root { padding: 3px !important; }
+
+  /* Top-left telemetry: slim, never full width */
+  .hud-top-row { gap: 4px !important; }
+  .hud-telemetry { width: auto !important; max-width: min(58vw, 460px) !important; padding: 3px 6px !important; background: rgba(5, 15, 26, .55) !important; border-top-width: 1px !important; box-shadow: none !important; }
+  .hud-telemetry > div:first-child { gap: 8px !important; }
+  .hud-telemetry > div:first-child > div > div:first-child { font-size: 7px !important; }
+  .hud-telemetry > div:first-child > div > div:last-child { font-size: 10px !important; }
+  .hud-detail-toggle { width: 16px !important; height: 16px !important; font-size: 8px !important; }
+  .hud-player-identity { transform: scale(.82); transform-origin: top right; }
+
+  /* Bottom dock: one slim strip */
+  .hud-mobile-dock { gap: 3px !important; padding: 3px !important; border-radius: 8px !important; background: rgba(8, 17, 29, .78) !important; }
+  .hud-mobile-dock > div:first-child { padding: 0 !important; gap: 3px !important; }
+  .touch-mode-indicator { font-size: 8px !important; padding: 2px 5px !important; min-height: 0 !important; }
+  .hud-category-tab { min-height: 24px !important; height: 24px; padding: 0 8px !important; font-size: 9px !important; line-height: 1; }
+  .command-dock-compact button { min-height: 0; }
+  .hud-action-strip { gap: 4px !important; min-height: 36px !important; padding: 0 !important; }
+  .hud-unit-btn-compact, .hud-build-btn-compact { min-width: 50px !important; min-height: 34px !important; height: 34px; padding: 2px 5px !important; gap: 3px !important; font-size: 9px !important; border-radius: 6px !important; }
+  .hud-strike-btn-compact { min-height: 32px !important; padding: 0 8px !important; font-size: 9px !important; }
+  .hud-action-strip [data-deploy] > :first-child,
+  .hud-action-strip [data-place] > :first-child { width: 20px !important; height: 20px !important; min-width: 20px !important; }
+  .hud-action-strip [data-deploy] *, .hud-action-strip [data-place] * { font-size: 9px; }
+  .hud-action-strip button { font-size: 9px !important; }
+
+  /* Selected-force panel sits just above the slim dock */
+  .selection-command-panel { bottom: calc(76px + env(safe-area-inset-bottom)) !important; padding: 3px 5px !important; gap: 3px !important; max-width: min(78vw, 520px) !important; background: rgba(5, 15, 26, .72) !important; }
+  .selection-command-btn { min-width: 38px !important; min-height: 30px !important; padding: 0 7px !important; font-size: 9px !important; }
+  .selection-overview { min-width: 70px !important; }
+
+  /* Right rail: small round-corner buttons */
+  .hud-utility-rail { gap: 2px !important; padding: 2px !important; background: rgba(4, 13, 23, .6) !important; }
+  .hud-utility-btn { width: 30px !important; min-width: 30px !important; height: 30px !important; min-height: 30px !important; padding: 0 !important; }
+  .hud-utility-btn svg { width: 15px !important; height: 15px !important; }
+
+  /* Field guide: small, top-centre, never blocks the battlefield */
+  .hud-tutorial { top: 38px !important; width: min(260px, 50vw) !important; padding: 6px 8px !important; opacity: .92; }
+  .hud-tutorial div { font-size: 8px !important; }
+  .hud-tutorial p { font-size: 9px !important; line-height: 1.3 !important; margin-top: 3px !important; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hud-tutorial button { margin-top: 4px !important; padding: 4px 6px !important; font-size: 9px !important; }
+
+  /* Radio / alert banners */
+  .game-hud-root .self-center > div { padding: 1px 8px !important; font-size: 8px !important; line-height: 1.3 !important; margin-top: 0 !important; }
+}
+
+/* Map tab: the tactical map is shown inside the dock, so let the strip grow just for it. */
+.hud-action-strip:has([data-testid="tactical-minimap-embedded"]) { max-height: none !important; min-height: 84px !important; align-items: center; }
+[data-testid="tactical-minimap-embedded"] { position: static !important; transform: none !important; opacity: 1 !important; }
+[data-testid="tactical-minimap-embedded"] canvas { width: 132px !important; height: 79px !important; }

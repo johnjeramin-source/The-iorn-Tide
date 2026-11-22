@@ -1,0 +1,6 @@
+{
+  "name": "Iron Tide: Coastal Vanguard",
+  "description": "A mobile-optimized 2D coastal survival RTS with 10 tactical maps, 12 distinct zombie classes, naval support, infantry, armored vehicles, helicopters, and dynamic weather.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["offline-capable gameplay", "touch controls", "Capacitor Android export"]
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.irontide.coastalvanguard",
+  "appName": "Iron Tide",
+  "webDir": "dist",
+  "backgroundColor": "#07131f",
+  "android": { "allowMixedContent": false },
+  "server": { "androidScheme": "https" }
+}
