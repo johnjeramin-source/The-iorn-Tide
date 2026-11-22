@@ -1,0 +1,153 @@
+name: Build Iron Tide APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# A newer push cancels the older run instead of queueing two APK builds.
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Type check (non-blocking)
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Engine tests (non-blocking)
+        continue-on-error: true
+        run: npm test
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Check web build output
+        run: |
+          test -f dist/index.html || { echo "dist/index.html missing - web build failed"; exit 1; }
+          echo "Web build OK: $(du -sh dist | cut -f1)"
+
+      - name: Add Android platform
+        run: npm run cap:add
+
+      - name: Set Android app name
+        run: |
+          python3 - <<'PYNAME'
+          from pathlib import Path
+          import re
+          p = Path("android/app/src/main/res/values/strings.xml")
+          s = p.read_text() if p.exists() else "<resources>\n</resources>\n"
+          for key in ("app_name", "title_activity_main"):
+              value = "Iron Tide"
+              pattern = rf'<string name="{key}">.*?</string>'
+              replacement = f'<string name="{key}">{value}</string>'
+              if re.search(pattern, s):
+                  s = re.sub(pattern, replacement, s, count=1)
+              else:
+                  s = s.replace("</resources>", f"  {replacement}\n</resources>")
+          p.parent.mkdir(parents=True, exist_ok=True)
+          p.write_text(s)
+          PYNAME
+
+      - name: Patch Android manifest and theme
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          grep -q 'screenOrientation' "$MANIFEST" || \
+            sed -i 's|<activity|<activity android:screenOrientation="sensorLandscape"|' "$MANIFEST"
+          STYLES=android/app/src/main/res/values/styles.xml
+          grep -q 'windowFullscreen' "$STYLES" || \
+            sed -i 's|</style>|    <item name="android:windowFullscreen">true</item>\n    </style>|' "$STYLES" || true
+
+      - name: Generate launcher icons safely
+        run: |
+          mkdir -p assets
+          cp public/pwa-512x512.png assets/icon-only.png
+          rm -f assets/icon-foreground.png assets/icon-background.png assets/icon-foreground-dark.png assets/icon-background-dark.png
+          npx --yes @capacitor/assets generate --android \
+            --iconBackgroundColor '#07131f' \
+            --iconBackgroundColorDark '#07131f'
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+
+      - name: Make sure the manifest uses the PNG launcher icons
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          m = Path("android/app/src/main/AndroidManifest.xml")
+          s = m.read_text()
+          for attr, value in (("android:icon", "@mipmap/ic_launcher"), ("android:roundIcon", "@mipmap/ic_launcher_round")):
+              if re.search(attr + r'="[^"]*"', s):
+                  s = re.sub(attr + r'="[^"]*"', f'{attr}="{value}"', s, count=1)
+              else:
+                  s = s.replace("<application", f'<application {attr}="{value}"', 1)
+          m.write_text(s)
+          PY
+
+      - name: Verify launcher icon resources exist
+        run: |
+          res=android/app/src/main/res
+          found=0
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            d="$res/mipmap-$density"
+            [ -d "$d" ] || continue
+            [ -f "$d/ic_launcher.png" ] || { echo "Missing $d/ic_launcher.png"; exit 1; }
+            found=$((found + 1))
+          done
+          [ "$found" -gt 0 ] || { echo "No launcher icon folders were generated"; exit 1; }
+          if grep -rlE '@mipmap/ic_launcher_(foreground|background)' "$res" --include=*.xml; then
+            echo "Stale adaptive icon reference found above"; exit 1
+          fi
+          echo "Launcher icons OK ($found densities)"
+
+      - name: Build debug APK
+        run: npm run apk:debug
+
+      - name: Copy APK with friendly filename
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -f "$APK" || { echo "Gradle finished but no debug APK was produced"; ls -R android/app/build/outputs || true; exit 1; }
+          cp "$APK" Iron-Tide.apk
+
+      - name: Verify APK contents
+        run: |
+          SIZE=$(stat -c%s Iron-Tide.apk)
+          [ "$SIZE" -gt 1000000 ] || { echo "APK suspiciously small ($SIZE bytes)"; exit 1; }
+          unzip -l Iron-Tide.apk | grep -q 'AndroidManifest.xml' || { echo "APK has no manifest"; exit 1; }
+          unzip -l Iron-Tide.apk | grep -q 'assets/public/index.html' || { echo "Game files missing from APK"; exit 1; }
+          echo "### Iron Tide APK" >> "$GITHUB_STEP_SUMMARY"
+          echo "Size: $((SIZE / 1024 / 1024)) MB" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: ${GITHUB_SHA::7}" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Iron-Tide-APK
+          path: Iron-Tide.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-failure-reports
+          path: |
+            android/app/build/reports
+            android/app/src/main/AndroidManifest.xml
+            android/app/src/main/res/values
+          if-no-files-found: ignore
+          retention-days: 7
